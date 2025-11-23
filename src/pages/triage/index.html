@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz de Triage – INP Eco‑Prompt</title>
+  <!-- Chemin de la feuille de style globale mis à jour -->
+  <link rel="stylesheet" href="../../../styles/style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Quiz de triage</h1>
+    <p>Sélectionne ton besoin et ta priorité pour obtenir des recommandations adaptées :</p>
+    <form id="quizForm">
+      <fieldset>
+        <legend>Quel est ton besoin principal ?</legend>
+        <label><input type="radio" name="task" value="Recherche factuelle / Définition" required /> Recherche factuelle / Définition</label><br />
+        <label><input type="radio" name="task" value="Explication / Synthèse de concept" /> Explication / Synthèse de concept</label><br />
+        <label><input type="radio" name="task" value="Rédaction / Création de contenu" /> Rédaction / Création de contenu</label><br />
+        <label><input type="radio" name="task" value="Génération / Debug de Code" /> Génération / Debug de Code</label><br />
+        <label><input type="radio" name="task" value="Génération d'Image / Design" /> Génération d'Image / Design</label>
+      </fieldset>
+
+      <fieldset>
+        <legend>Quelle est ta priorité ?</legend>
+        <label><input type="radio" name="priority" value="Sobriété Maximale" required /> 🍃 Sobriété Maximale</label><br />
+        <label><input type="radio" name="priority" value="Équilibre" /> ⚖️ Équilibre</label><br />
+        <label><input type="radio" name="priority" value="Performance Maximale" /> ⚡️ Performance Maximale</label>
+      </fieldset>
+
+      <button type="submit">Voir les recommandations</button>
+      <!-- Bouton pour revenir à la page précédente -->
+      <button type="button" id="backFromTriage" class="back-btn">⬅ Retour</button>
+    </form>
+  </div>
+  <!-- Chemin du script ajusté -->
+  <script src="script.js"></script>
+</body>
+</html>

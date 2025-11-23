@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Qui sommes nous ?</title>
+  <!-- Mise à jour du chemin vers la feuille de style globale après restructuration -->
+  <link rel="stylesheet" href="../../../styles/style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Qui sommes nous ?</h1>
+    <p>Nous sommes un collectif de neuf étudiants de Grenoble INP‑ENSE3 passionnés par les technologies responsables et la sobriété numérique. Notre objectif est d'aider nos camarades à utiliser l'intelligence artificielle de manière réfléchie, en veillant à minimiser son impact environnemental.</p>
+    <p>Ce projet est né d'une volonté commune de créer des outils innovants et éthiques, adaptés aux besoins des étudiants de Grenoble INP et de l'UGA. Nous espérons que cette extension vous sera utile et contribuera à une utilisation plus consciente de l'IA.</p>
+    <button id="backHomeFromAbout" class="back-btn">⬅ Retour</button>
+    <!-- Section de contact pour recueillir les retours utilisateur -->
+    <div class="contact-section">
+      <p>Pour un retour utilisateur, un problème, des remarques ou des suggestions n'hésitez pas à nous contacter :</p>
+      <a href="mailto:kap.ai.team@example.com?subject=Feedback%20KAP.ai" id="contactBtn" class="action-btn">Nous contacter</a>
+    </div>
+  </div>
+  <script>
+    // Le bouton "Retour" ramène systématiquement à la page d'accueil. L'utilisation
+    // de history.back() a été remplacée pour résoudre un bug d'inactivité.
+    document.getElementById('backHomeFromAbout').addEventListener('click', () => {
+      // Redirige vers la nouvelle page d'entrée restructurée
+      window.location.href = '../entry/index.html';
+    });
+  </script>
+</body>
+</html>

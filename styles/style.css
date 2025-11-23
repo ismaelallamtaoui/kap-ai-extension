@@ -1,0 +1,1125 @@
+body {
+  width: 350px;
+  height: 450px; /* ou ajuste selon besoin */
+}
+
+.container {
+  max-width: 350px;
+  width: 100%;
+  height: 100%;
+}
+
+/* Spécifique à la page d'accueil : applique une image d'arrière‑plan avec une opacité réduite */
+.container.entry {
+  /* Couche l'image en arrière plan et occupe toute la surface du conteneur */
+  /* Met à jour le chemin de l'image d'arrière‑plan après déplacement des assets */
+  background-image: url('../assets/images/background.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  overflow: hidden;
+}
+
+/* Overlay blanc pour atténuer l'image d'arrière plan et améliorer la lisibilité du texte */
+.container.entry::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.6);
+  z-index: 0;
+  border-radius: inherit;
+}
+
+/* Place le contenu de la page d'accueil au-dessus de l'image et de l'overlay */
+.container.entry > * {
+  position: relative;
+  z-index: 1;
+}
+
+/*
+ * Jauge de consommation d'eau pour sensibiliser l'utilisateur.
+ * La jauge se compose d'un fond bleu clair, d'un remplissage bleu et de repères.
+ */
+/* ---------------------------------------------------------------------------
+ * Nouvelle jauge de consommation pour la page d'accueil
+ *
+ * Le design s'inspire du pictogramme « batterie » fourni par le porteur du
+ * projet. Nous avons remplacé la précédente jauge à repères par un
+ * composant centré, doté d'un encadrement gris et d'une partie saillante
+ * symbolisant l'embout de la batterie. Le remplissage bleu se met à jour via
+ * la largeur de .gauge-fill.
+ */
+.water-gauge {
+  position: relative;
+  width: 85%;
+  margin: 20px auto;
+  padding: 0;
+}
+
+.gauge-background {
+  position: relative;
+  width: 100%;
+  height: 20px;
+  background-color: #eceff1; /* fond clair de la batterie pour un meilleur contraste */
+  border: 3px solid #37474f; /* bordure plus épaisse pour visibilité */
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* Embout de la batterie : petit rectangle sur la droite */
+.gauge-background::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  right: -12px;
+  width: 10px;
+  height: 14px;
+  background-color: #b0bec5;
+  border: 3px solid #37474f;
+  border-left: none;
+  border-radius: 0 2px 2px 0;
+}
+
+.gauge-fill {
+  height: 100%;
+  background-color: #29b6f6; /* bleu soutenu pour le remplissage */
+  width: 0%;
+  border-radius: 2px 0 0 2px;
+  transition: width 0.6s ease;
+}
+
+/* Les repères et la goutte ne sont plus affichés sur ce nouveau design */
+.gauge-markers,
+.gauge-marker,
+.gauge-drop {
+  display: none !important;
+}
+
+h1 {
+  font-size: 1.5em;
+  margin-bottom: 1em;
+}
+
+label {
+  display: block;
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+select, input, textarea, button {
+  width: 100%;
+  margin-top: 5px;
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+/* Style personnalisé pour les listes déroulantes afin de correspondre à
+ * l'apparence souhaitée : fond clair, bord arrondi et suppression de
+ * l'aspect natif. Les flèches sont masquées pour un rendu épuré. */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: #f7f7f7;
+  padding-right: 32px; /* espace réservé pour la flèche */
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="%23357a38"><polygon points="0,0 20,0 10,10"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+
+button {
+  background-color: #357a38;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9em;
+}
+
+button:hover {
+  background-color: #2e7031;
+}
+
+.eco-score {
+  margin-top: 10px;
+  padding: 10px;
+  background: #e0f2f1;
+  border-radius: 8px;
+  font-size: 0.9em;
+}
+
+/* Styles spécifiques à la page d'accueil et aux transitions */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.6em;
+  font-weight: bold;
+}
+
+.question {
+  font-size: 1.4em;
+  font-weight: bold;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.actions,
+.next-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.alt-links {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin: 20px 0;
+}
+
+.alt-link img {
+  width: 80px;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: transform 0.2s ease;
+}
+
+.alt-link img:hover {
+  transform: scale(1.05);
+}
+
+/* Boutons d'action et de retour spécifiques */
+.action-btn {
+  background-color: #357a38;
+  color: #fff;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+/* Bouton de retour spécifique (hérite du style général mais plus discret) */
+.back-btn {
+  background-color: #f5f5f5;
+  color: #357a38;
+  border: 1px solid #357a38;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-top: 20px;
+  cursor: pointer;
+  display: block;
+  width: auto;
+}
+
+.back-btn:hover {
+  background-color: #e8f5e9;
+}
+
+/* Style pour l'offre étudiante au sein des recommandations */
+.student-offer {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 0.85em;
+}
+
+.student-offer a {
+  color: #00695c;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Style pour la section de contact dans la page "Qui sommes nous ?" */
+.contact-section {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.contact-section p {
+  margin-bottom: 10px;
+  font-size: 0.85em;
+}
+
+.contact-section a {
+  display: inline-block;
+  background-color: #357a38;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  text-decoration: none;
+}
+
+.contact-section a:hover {
+  background-color: #2e7031;
+}
+
+/* Sélecteur IA à côté du cœur dans le constructeur de prompt */
+.ai-picker {
+  margin-right: 8px;
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 0.9em;
+}
+
+/* Alignement horizontal de la barre de sélection (sélecteur, titre, cœur) */
+.selection-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.action-btn:hover {
+  background-color: #2e7031;
+}
+
+.back-btn {
+  background-color: #ffffff;
+  color: #357a38;
+  border: 1px solid #357a38;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.back-btn:hover {
+  background-color: #f5f5f5;
+  color: #2e7031;
+}
+
+/* Ajuste la taille et l'espacement des boutons d'action sur la page d'accueil pour éviter qu'ils ne collent aux bords */
+/* Les boutons d'action sur la page d'accueil sont centrés et prennent une
+ * largeur maximale contrôlée. Cela évite qu'ils collent aux bords et
+ * respecte la maquette fournie. */
+.container.entry .next-actions .action-btn {
+  width: 80%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Styles pour la zone de pied de page contenant les liens "mieux nous connaître" et "paramètres" */
+.footer-links {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  padding: 0 20px;
+}
+.footer-btn {
+  background: none;
+  border: none;
+  color: #357a38;
+  font-size: 0.9em;
+  cursor: pointer;
+  padding: 8px;
+}
+.footer-btn:hover {
+  text-decoration: underline;
+}
+
+.gear-icon {
+  font-size: 1.3em;
+}
+
+/* Styles pour les sections du quiz (fieldset) */
+fieldset {
+  /* Améliore l'espacement et la lisibilité des sections du quiz */
+  border: 1px solid #ddd;
+  padding: 15px;
+  margin-top: 15px;
+  border-radius: 12px;
+}
+
+legend {
+  padding: 0 8px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  font-size: 1.1em;
+}
+
+/* Style des options radio dans le quiz de triage */
+fieldset label {
+  /* Dispose chaque option radio en deux colonnes : le bouton et son libellé */
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-weight: normal;
+  font-size: 1em;
+  line-height: 1.4;
+}
+
+fieldset input[type="radio"] {
+  margin-right: 10px;
+  transform: scale(1.2);
+}
+
+/* Styles pour les cartes d'IA dans la page des recommandations */
+.card {
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 15px;
+  background: #fff;
+}
+
+.card h2 {
+  margin-top: 0;
+  margin-bottom: 5px;
+  font-size: 1.3em;
+}
+
+.card .eco,
+.card .perf {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+/* Bouton de personnalisation dans les cartes */
+.card .action-btn {
+  margin-top: 10px;
+  width: 100%;
+  font-size: 0.9em;
+}
+
+/* --------------------------------------------------------------------
+ * Styles pour la section « Mieux prompter » dans la page de profil
+ * Cette section permet de choisir un mode de génération de prompt, de
+ * saisir un contexte et d'ajouter des clarifications via des chips.
+ */
+.prompt-section {
+  margin-top: 20px;
+  border-top: 1px solid #ddd;
+  padding-top: 10px;
+}
+.prompt-section h2 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 1.2em;
+  color: #357a38;
+}
+.mode-selection {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.mode-selection label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: bold;
+  font-size: 0.9em;
+  cursor: pointer;
+}
+.mode-section textarea {
+  width: 100%;
+  min-height: 60px;
+  margin-top: 5px;
+  margin-bottom: 10px;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  resize: vertical;
+  box-sizing: border-box;
+}
+.mode-section .action-btn {
+  width: auto;
+}
+.prompt-result textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  resize: vertical;
+  box-sizing: border-box;
+}
+.auto-correct-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+  font-size: 0.9em;
+}
+/* Commutateur pour la correction automatique */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 22px;
+}
+.switch input {
+  display: none;
+}
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #6b7280;
+  transition: 0.4s;
+  border-radius: 9999px;
+}
+.slider::before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 2px;
+  top: 2px;
+  background-color: #ffffff;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+.switch input:checked + .slider {
+  background-color: #357a38;
+}
+.switch input:checked + .slider::before {
+  transform: translateX(24px);
+}
+.chips-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0;
+}
+.chip {
+  background-color: #eef4fd;
+  border: 1px solid #cbd5e1;
+  color: #1f2937;
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 0.8em;
+  cursor: pointer;
+  user-select: none;
+}
+.chip.selected {
+  background-color: #357a38;
+  color: #fff;
+  border-color: #357a38;
+}
+.recommended-model {
+  margin-top: 12px;
+  padding: 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background-color: #f7f9fc;
+  font-size: 0.85em;
+}
+.recommended-model h3 {
+  margin-top: 0;
+  margin-bottom: 4px;
+  font-size: 1em;
+  color: #357a38;
+}
+
+/* --------------------------------------------------------------------
+ * Styles spécifiques à l'interface « Mieux prompter » intégrée dans
+ * le panneau latéral. Ces classes sont préfixées par .mp- afin de
+ * n'interférer avec aucune autre vue ou composant de l'extension.
+ *
+ * Palette utilisée :
+ *   - Bleu primaire : #2563EB
+ *   - Bleu clair    : #E8F0FE
+ *   - Bleu profond  : #1E3A8A
+ *   - Neutres       : #1F2937, #6B7280, #D1D5DB, #F8FAFC, #FFFFFF
+ */
+.mp-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  padding: 12px;
+  box-sizing: border-box;
+  background-color: #F8FAFC;
+  overflow-y: auto;
+}
+.mp-mode-toggle {
+  display: flex;
+  border: 1px solid #D1D5DB;
+  border-radius: 9999px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.mp-mode-button {
+  flex: 1;
+  padding: 6px 8px;
+  font-size: 0.85em;
+  border: none;
+  background-color: transparent;
+  color: #1E3A8A;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.mp-mode-button.active {
+  background-color: #2563EB;
+  color: #FFFFFF;
+}
+.mp-mode-button:not(.active):hover {
+  background-color: #E8F0FE;
+}
+.mp-section {
+  display: flex;
+  flex-direction: column;
+}
+.mp-label {
+  font-weight: bold;
+  font-size: 0.9em;
+  margin-bottom: 4px;
+  color: #1F2937;
+}
+.mp-input {
+  padding: 8px;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  font-size: 0.9em;
+  resize: vertical;
+  background-color: #FFFFFF;
+  color: #1F2937;
+  margin-bottom: 8px;
+}
+.mp-btn {
+  margin-top: 8px;
+  padding: 10px;
+  font-size: 0.9em;
+  background-color: #2563EB;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.mp-btn:hover {
+  background-color: #1E3A8A;
+}
+.mp-prompt-result {
+  margin-top: 8px;
+}
+.mp-prompt-result > summary {
+  font-weight: bold;
+  font-size: 0.9em;
+  cursor: pointer;
+  color: #2563EB;
+  list-style: none;
+}
+.mp-result {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  resize: vertical;
+  background-color: #F8FAFC;
+  color: #1F2937;
+  margin-top: 6px;
+  font-size: 0.85em;
+}
+.mp-auto-correct-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 0.85em;
+  color: #1F2937;
+}
+.mp-chips-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.mp-chip {
+  background-color: #E8F0FE;
+  border: 1px solid #D1D5DB;
+  color: #1F2937;
+  border-radius: 9999px;
+  padding: 4px 8px;
+  font-size: 0.8em;
+  cursor: pointer;
+  user-select: none;
+}
+.mp-chip.selected {
+  background-color: #2563EB;
+  border-color: #2563EB;
+  color: #FFFFFF;
+}
+.mp-suggestions {
+  margin: 8px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.mp-suggestion {
+  background-color: #F8FAFC;
+  border: 1px solid #D1D5DB;
+  color: #1E3A8A;
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: 0.8em;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.mp-suggestion:hover {
+  background-color: #E8F0FE;
+}
+.mp-model-recommendation {
+  margin-top: 12px;
+  padding: 10px;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  background-color: #E8F0FE;
+  font-size: 0.85em;
+  color: #1F2937;
+}
+.mp-model-recommendation h3 {
+  margin-top: 0;
+  margin-bottom: 4px;
+  font-size: 0.95em;
+  color: #1E3A8A;
+}
+/* Commutateur personnalisé pour la correction automatique en mode avancé */
+.mp-switch {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 22px;
+}
+.mp-switch input {
+  display: none;
+}
+.mp-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #6B7280;
+  transition: 0.4s;
+  border-radius: 9999px;
+}
+.mp-slider::before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 2px;
+  top: 2px;
+  background-color: #FFFFFF;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+.mp-switch input:checked + .mp-slider {
+  background-color: #2563EB;
+}
+.mp-switch input:checked + .mp-slider::before {
+  transform: translateX(24px);
+}
+
+/* Bouton d'action en contour (fond blanc, bord gris) utilisé pour "Ouvrir" et pour
+ * certains boutons de la page d'accueil. Ce style s'inspire du bouton
+ * "Personnaliser mon prompt" mais inversé : fond clair et bord contrasté. */
+.outline-btn {
+  display: inline-block;
+  padding: 8px 12px;
+  background-color: #ffffff;
+  border: 1px solid #ccc;
+  color: #357a38;
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 0.9em;
+}
+.outline-btn:hover {
+  background-color: #f5f5f5;
+}
+
+/* Affichage de l'IA sélectionnée et de la priorité dans le constructeur */
+.selection-info {
+  font-size: 1.1em;
+  font-weight: bold;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+/* Barre contenant la sélection et le cœur favori dans le constructeur */
+.selection-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+/* Bouton favori (cœur) */
+.favorite-btn {
+  background: none;
+  border: none;
+  font-size: 1.6em;
+  cursor: pointer;
+  line-height: 1;
+  color: #888;
+  transition: color 0.3s ease;
+}
+.favorite-btn.favorited {
+  color: #e53935; /* rouge lorsque sélectionné */
+}
+
+/* Cœur utilisé dans la liste des prompts récents */
+.favorite-toggle-btn {
+  background: none;
+  border: none;
+  font-size: 1.4em;
+  cursor: pointer;
+  line-height: 1;
+  color: #888;
+  transition: color 0.3s ease;
+}
+.favorite-toggle-btn.favorited {
+  color: #e53935;
+}
+
+/* ---------------------------------------------------------------------------
+ * Constructeur de prompt avancé
+ *
+ * Ces styles complètent l'interface du constructeur de prompt pour intégrer
+ * de nouvelles fonctionnalités : mode rapide/expert, saisie libre, préférences,
+ * suggestions et aperçu dynamique. Ils respectent l'identité visuelle
+ * existante (couleurs vertes et neutralité des zones) et garantissent une
+ * bonne lisibilité dans le contexte d'une extension compacte.
+ */
+
+/* Conteneur du commutateur de mode et de son libellé */
+.mode-switch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+/* Interrupteur personnalisé pour basculer entre mode rapide et expert */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 20px;
+}
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 34px;
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+.switch input:checked + .slider {
+  background-color: #357a38;
+}
+.switch input:checked + .slider:before {
+  transform: translateX(18px);
+}
+
+/* Bloc de saisie libre */
+.free-input-block {
+  margin-top: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.free-input-block textarea {
+  width: 100%;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  resize: vertical;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+.free-input-block .action-btn {
+  align-self: flex-start;
+  padding: 8px 12px;
+  font-size: 0.9em;
+}
+
+/* Bloc des préférences */
+.preferences-block {
+  margin-top: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.preferences-block label {
+  font-weight: bold;
+}
+.preferences-block select,
+.preferences-block input[type="range"] {
+  width: 100%;
+  margin-top: 4px;
+  padding: 6px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8em;
+  color: #555;
+  margin-top: -6px;
+}
+
+/* Champs détaillés (mode expert) */
+.detailed-fields {
+  margin-top: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.detailed-fields label {
+  font-weight: bold;
+}
+.detailed-fields input,
+.detailed-fields select {
+  width: 100%;
+  padding: 6px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+/* Bloc des suggestions */
+.suggestions-block {
+  margin-top: 10px;
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 8px;
+  max-height: 100px;
+  overflow-y: auto;
+}
+.suggestions-block ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.suggestions-block li {
+  margin: 4px 0;
+  cursor: pointer;
+  color: #357a38;
+  text-decoration: underline;
+  font-size: 0.9em;
+}
+.suggestions-block li:hover {
+  color: #2e7031;
+}
+
+/* Aperçu du prompt */
+.preview-block {
+  margin-top: 15px;
+  background-color: #fafafa;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px;
+  max-height: 150px;
+  overflow-y: auto;
+  font-size: 0.9em;
+  white-space: pre-wrap;
+  color: #333;
+}
+.preview-block h2 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-size: 1.1em;
+}
+
+/* ---------------------------------------------------------------------------
+ * Page des favoris (favorites.html)
+ *
+ * Ce bloc de styles personnalise l'affichage des prompts favoris afin de
+ * respecter la maquette fournie. On y retrouve un bouton "Ajouter", des
+ * cartes numérotées avec le nom et le contenu du prompt, et des actions
+ * (copier/supprimer) colorées. Un bouton de confirmation en bas permet
+ * de revenir à l'accueil.
+ */
+
+/* Conteneur de la liste des favoris */
+.fav-list {
+  margin-top: 10px;
+}
+
+/* Bouton Ajouter */
+.add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #e8f5e9;
+  color: #357a38;
+  border: 2px solid #357a38;
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+.add-btn:hover {
+  background-color: #c8e6c9;
+}
+
+/* Carte de favori */
+.fav-card {
+  display: flex;
+  align-items: flex-start;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 10px;
+  background: #fff;
+}
+
+/* Numéro du favori */
+.fav-index {
+  background-color: #e3f2fd;
+  color: #1e88e5;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-weight: bold;
+  margin-right: 10px;
+  min-width: 24px;
+  text-align: center;
+}
+
+/* Conteneur d'informations (nom + contenu) */
+.fav-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Nom du prompt */
+.fav-name {
+  font-weight: bold;
+  color: #333;
+  font-size: 1em;
+}
+
+/* Contenu du prompt */
+.fav-content {
+  font-size: 0.85em;
+  color: #555;
+  white-space: pre-wrap;
+}
+
+/* Actions (copier, supprimer) */
+.fav-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-left: 10px;
+}
+/* Style générique pour les boutons d'action dans les favoris */
+.fav-actions button {
+  background: none;
+  border: none;
+  font-size: 1.1em;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px;
+}
+.fav-actions button {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 1.3em;
+  cursor: pointer;
+}
+.delete-btn {
+  color: #e53935;
+}
+.delete-btn:hover {
+  color: #b71c1c;
+}
+.copy-btn {
+  color: #1e88e5;
+}
+.copy-btn:hover {
+  color: #1565c0;
+}
+/* Bouton de modification des favoris (stylo) */
+.edit-btn {
+  color: #8e24aa;
+}
+.edit-btn:hover {
+  color: #6a1b9a;
+}
+/* Boutons de déplacement des favoris (flèches) */
+.move-btn {
+  color: #757575;
+  font-size: 1em;
+}
+.move-btn:hover {
+  color: #424242;
+}
+
+/* Bouton de confirmation / retour en bas de page */
+.confirm-btn {
+  display: block;
+  margin: 20px auto 0 auto;
+  padding: 8px 12px;
+  background-color: #e0f2f1;
+  color: #357a38;
+  border: 2px solid #357a38;
+  border-radius: 20px;
+  font-size: 1.2em;
+  width: 50px;
+  text-align: center;
+  cursor: pointer;
+}
+
+/* Bouton destiné à accéder à la page des prompts récents. Ce style
+ * reprend la forme du bouton de confirmation mais s'étend davantage en
+ * largeur pour accueillir le texte sans retour à la ligne. */
+.recent-btn {
+  width: 90% !important;
+  max-width: 300px;
+  text-align: center;
+}
+.confirm-btn:hover {
+  background-color: #b2dfdb;
+}

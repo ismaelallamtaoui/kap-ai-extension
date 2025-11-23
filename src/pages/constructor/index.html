@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>KAP – Guidage de prompt</title>
+  <!-- Importe la feuille de style globale -->
+  <!-- Chemin de la feuille de style global mis à jour après restructuration -->
+  <link rel="stylesheet" href="../../../styles/style.css">
+  <!-- Styles spécifiques au constructeur remis au goût du jour. -->
+  <style>
+    /* Palette bleue modernisée */
+    :root {
+      --primary-color: #0e6cf0;
+      --secondary-color: #eef4fd;
+      --accent-color: #3b82f6;
+      --text-color: #1f2937;
+      --border-color: #cbd5e1;
+      --bg-color: #f5f8fc;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg-color);
+      color: var(--text-color);
+      font-family: system-ui, sans-serif;
+    }
+
+    /* Container occupant toute la hauteur de la sidepanel – fond blanc comme demandé */
+    .kap-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      width: 100%;
+      overflow-y: auto;
+      padding: 12px;
+      box-sizing: border-box;
+      background-color: #ffffff;
+    }
+
+    /* En-tête avec logo et titres */
+    .kap-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .kap-header .left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .kap-header .kap-logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+    }
+    .kap-header .kap-title {
+      font-weight: bold;
+      font-size: 1.2em;
+    }
+    .kap-header .kap-subtitle {
+      font-size: 0.8em;
+      color: var(--accent-color);
+      margin-left: 4px;
+    }
+    .favorite-btn {
+      background: transparent;
+      border: none;
+      font-size: 1.4em;
+      color: var(--accent-color);
+      cursor: pointer;
+    }
+
+    /* Section titre et jauge */
+    .kap-intro {
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .kap-question {
+      font-size: 1.3em;
+      font-weight: bold;
+      margin: 0;
+      margin-bottom: 8px;
+    }
+    .kap-water {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .kap-water-amount {
+      font-size: 0.9em;
+      color: var(--primary-color);
+    }
+    .kap-gauge {
+      width: 80%;
+    }
+
+    /* Mode toggle */
+    .kap-mode {
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .kap-mode label {
+      font-weight: bold;
+      margin-right: auto;
+    }
+    /* Toggle switch styles reused from global */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 46px;
+      height: 22px;
+    }
+    .switch input { display: none; }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #6b7280; /* gris foncé pour l'état désactivé */
+      transition: 0.4s;
+      border-radius: 9999px;
+    }
+    .slider::before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 2px;
+      top: 2px;
+      background-color: #ffffff;
+      transition: 0.4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: var(--primary-color);
+    }
+    input:checked + .slider::before {
+      transform: translateX(24px);
+    }
+
+    /* Champs et zones de texte */
+    textarea, input[type="text"] {
+      width: 100%;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px;
+      background: #fff;
+      font-size: 0.9em;
+      resize: vertical;
+      box-sizing: border-box;
+    }
+
+    label.field-label {
+      display: block;
+      margin-top: 12px;
+      margin-bottom: 4px;
+      font-weight: bold;
+      font-size: 0.85em;
+    }
+
+    /* Drop-down container */
+    .kap-dropdowns {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+      margin-bottom: 12px;
+    }
+    .dropdown {
+      flex: 1 1 100px;
+      min-width: 100px;
+    }
+    .dropdown select {
+      width: 100%;
+      appearance: none;
+      background-color: #f1f5fb;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 8px 28px 8px 10px;
+      font-size: 0.85em;
+      color: var(--text-color);
+      background-image: url('data:image/svg+xml;utf8,<svg fill="%230E6CF0" height="16" viewBox="0 0 20 20" width="16" xmlns="http://www.w3.org/2000/svg"><polygon points="0,0 20,0 10,10"/></svg>');
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+    }
+
+    /* Buttons */
+    .kap-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .kap-actions button {
+      border: 1px solid var(--primary-color);
+      background: #fff;
+      color: var(--primary-color);
+      border-radius: 8px;
+      padding: 8px;
+      font-size: 0.9em;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .kap-actions button:hover {
+      background: var(--primary-color);
+      color: #fff;
+    }
+
+    /* Suggestions section */
+    .kap-suggestions {
+      margin-top: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .suggestion-category {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .suggestion-category .cat-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: bold;
+      font-size: 0.9em;
+    }
+    .ai-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background: #fff;
+    }
+    .ai-card .ai-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ai-card img {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+    }
+    .ai-card .ai-name {
+      font-weight: bold;
+      font-size: 0.9em;
+    }
+    .ai-card .ai-rating {
+      font-size: 0.8em;
+      color: var(--primary-color);
+    }
+    .ai-card button {
+      border: 1px solid var(--primary-color);
+      background: var(--primary-color);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.8em;
+      cursor: pointer;
+    }
+    .ai-card button:hover {
+      background: #0b5fd6;
+    }
+
+    /* Nouvelle barre supérieure avec bascule de mode et étoile favori */
+    .kap-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .mode-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      background-color: #f8f9fb;
+      border: 1px solid #e5e7eb;
+      border-radius: 9999px;
+    }
+    .mode-container span {
+      font-weight: bold;
+      font-size: 0.9em;
+    }
+    /* Bouton étoile pour les favoris */
+    .star-btn {
+      border: none;
+      background-color: #4b5563;
+      color: #ffffff;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2em;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .star-btn.favorited {
+      color: #fbbf24;
+    }
+    /* Section goutte, texte et jauge */
+    .kap-water-section {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .drop-icon {
+      width: 44px;
+      height: 52px;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .drop-icon::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #0e6cf0;
+      border-radius: 50% 50% 50% 50% / 70% 70% 30% 30%;
+    }
+    .drop-icon::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 50%;
+      background-color: #ffffff;
+      opacity: 0.9;
+      border-radius: 50% 50% 0 0 / 70% 70% 0 0;
+    }
+    .water-content .kap-question {
+      margin: 0;
+      font-weight: bold;
+      font-size: 1.2em;
+    }
+    .water-content .water-amount {
+      margin: 4px 0;
+      font-size: 1em;
+      color: #1f2937;
+    }
+    .water-content .water-amount b {
+      font-weight: bold;
+    }
+    .water-gauge {
+      margin-top: 4px;
+    }
+    .gauge-bg {
+      width: 100%;
+      height: 8px;
+      background-color: #e5e7eb;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .gauge-fill {
+      height: 100%;
+      background-color: #0e6cf0;
+      width: 0%;
+      transition: width 0.4s ease;
+    }
+  </style>
+</head>
+<body>
+  <div class="kap-container">
+    <!-- Barre supérieure : mode et favori -->
+    <div class="kap-top">
+      <div class="mode-container">
+        <span id="modeLabel">Mode rapide</span>
+        <label class="switch">
+          <input type="checkbox" id="expertModeToggle" />
+          <span class="slider"></span>
+        </label>
+      </div>
+      <button id="favoriteToggle" class="favorite-btn star-btn" title="Ajouter aux favoris">★</button>
+    </div>
+
+    <!-- Section goutte et jauge -->
+    <div class="kap-water-section">
+      <div class="drop-icon"></div>
+      <div class="water-content">
+        <p class="kap-question">Ai‑je vraiment besoin de l'IA&nbsp;?</p>
+        <p class="water-amount"><b id="waterConsumedLiters">10L</b> consommés cette semaine</p>
+        <div class="water-gauge">
+          <div class="gauge-bg">
+            <div class="gauge-fill" id="waterFill"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick mode section -->
+    <section id="quick-mode">
+      <label class="field-label" for="freeInput">Décrivez votre besoin :</label>
+      <textarea id="freeInput" rows="3" placeholder="Ex : Je révise un examen de mécanique demain et j'ai besoin d'un résumé rapide…"></textarea>
+      <div class="kap-dropdowns">
+        <div class="dropdown">
+          <label class="field-label" for="toneSelect">Ton &amp; Style :</label>
+          <select id="toneSelect">
+            <option value="pedagogique">Pédagogique</option>
+            <option value="creatif">Créatif</option>
+            <option value="professionnel">Professionnel</option>
+            <option value="direct">Direct</option>
+            <option value="ajouter" data-add="true">+ Ajouter…</option>
+          </select>
+        </div>
+        <div class="dropdown">
+          <label class="field-label" for="detailSelect">Format :</label>
+          <select id="detailSelect">
+            <option value="court">Court</option>
+            <option value="normal">Normal</option>
+            <option value="long">Long</option>
+          </select>
+        </div>
+        <div class="dropdown">
+          <label class="field-label" for="langSelect">Langue :</label>
+          <select id="langSelect">
+            <option value="fr">Français</option>
+            <option value="en">Anglais</option>
+            <option value="ajouter" data-add="true">+ Ajouter…</option>
+          </select>
+        </div>
+      </div>
+      <div class="kap-actions">
+        <button id="analyzeBtn">Analyser et améliorer</button>
+        <button id="copyBtn">Copier</button>
+      </div>
+    </section>
+
+    <!-- Expert mode section -->
+    <section id="expert-mode" style="display: none;">
+      <label class="field-label" for="contexte">Rôle &amp; Contexte :</label>
+      <input type="text" id="contexte" placeholder="Ex : Examen demain, peu de temps" />
+      <label class="field-label" for="demande">Tâche :</label>
+      <input type="text" id="demande" placeholder="Ex : Résumer le cours en 5 points" />
+      <label class="field-label" for="contraintes">Contrainte &amp; Format :</label>
+      <input type="text" id="contraintes" placeholder="Ex : Moins de 100 mots" />
+      <div class="kap-dropdowns">
+        <div class="dropdown">
+          <label class="field-label" for="toneSelectExpert">Ton &amp; Style :</label>
+          <select id="toneSelectExpert">
+            <option value="pedagogique">Pédagogique</option>
+            <option value="creatif">Créatif</option>
+            <option value="professionnel">Professionnel</option>
+            <option value="direct">Direct</option>
+            <option value="ajouter" data-add="true">+ Ajouter…</option>
+          </select>
+        </div>
+        <div class="dropdown">
+          <label class="field-label" for="langSelectExpert">Langue :</label>
+          <select id="langSelectExpert">
+            <option value="fr">Français</option>
+            <option value="en">Anglais</option>
+            <option value="ajouter" data-add="true">+ Ajouter…</option>
+          </select>
+        </div>
+      </div>
+      <label class="field-label" for="example">Exemple &amp; Pièce jointe :</label>
+      <input type="text" id="example" placeholder="Ex : Examen demain, peu de temps" />
+      <label class="field-label" for="objective">Objectif &amp; KPI :</label>
+      <input type="text" id="objective" placeholder="Ex : Résumer le cours en 5 points" />
+      <div class="kap-actions">
+        <button id="analyzeBtnExpert">Analyser et améliorer</button>
+        <button id="copyBtnExpert">Copier</button>
+      </div>
+    </section>
+
+    <!-- Suggestions section -->
+    <div class="kap-suggestions">
+      <div class="suggestion-category">
+        <div class="cat-header">
+          <span>🍃</span> <span>Sobriété</span>
+        </div>
+        <div id="ai-sobriete" class="ai-card">
+          <div class="ai-info">
+        <img src="../../../assets/images/K.png" alt="AI" />
+            <div>
+              <div class="ai-name" id="sobriete-name">Perplexity</div>
+              <div class="ai-rating" id="sobriete-rating">Sobriété A</div>
+            </div>
+          </div>
+          <button id="sobriete-open">Ouvrir</button>
+        </div>
+      </div>
+      <div class="suggestion-category">
+        <div class="cat-header">
+          <span>⚖️</span> <span>Équilibre</span>
+        </div>
+        <div id="ai-equilibre" class="ai-card">
+          <div class="ai-info">
+            <img src="../../../assets/images/K.png" alt="AI" />
+            <div>
+              <div class="ai-name" id="equilibre-name">Perplexity</div>
+              <div class="ai-rating" id="equilibre-rating">Équilibre A</div>
+            </div>
+          </div>
+          <button id="equilibre-open">Ouvrir</button>
+        </div>
+      </div>
+      <div class="suggestion-category">
+        <div class="cat-header">
+          <span>⚡️</span> <span>Performance</span>
+        </div>
+        <div id="ai-performance" class="ai-card">
+          <div class="ai-info">
+            <img src="../../../assets/images/K.png" alt="AI" />
+            <div>
+              <div class="ai-name" id="performance-name">Perplexity</div>
+              <div class="ai-rating" id="performance-rating">Performance A</div>
+            </div>
+          </div>
+          <button id="performance-open">Ouvrir</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <!-- Chemin du script ajusté après déplacement du fichier -->
+  <script src="script.js"></script>
+</body>
+</html>

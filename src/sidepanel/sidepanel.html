@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KAP.ai – Panneau latéral</title>
+  <!--
+    On importe la feuille de styles globale pour permettre de styliser
+    l'interface de "Mieux prompter" avec la palette définie dans
+    style.css. Sans cette inclusion, nos classes personnalisées ne
+    bénéficieront pas des règles déclarées dans le fichier global.
+  -->
+  <!-- Chemin mis à jour après restructuration : remonte jusqu'à la racine puis styles -->
+  <link rel="stylesheet" href="../../styles/style.css" />
+  <!--
+    Ce fichier définit l'interface principale du panneau latéral. Il remplace
+    l'ancien popup de l'extension par une barre d'onglets et un espace
+    d'affichage. Chaque onglet charge l'une des pages existantes de
+    l'extension (constructeur, triage, favoris, profil) dans un iframe. Les
+    pages internes conservent leur logique et leur style car elles sont
+    simplement chargées dans ce cadre.
+  -->
+  <style>
+    /* Réinitialise les marges et occupe toute la hauteur du panneau. */
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+    /* Conteneur flex vertical pour répartir la barre et le contenu. */
+    .wrapper {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      width: 100%;
+      font-family: sans-serif;
+    }
+    /* Barre d'onglets horizontale en haut du panneau. */
+    .tab-bar {
+      display: flex;
+      flex-shrink: 0;
+      /* Palette bleue harmonisée avec le reste de l'extension */
+      background-color: #0e6cf0;
+    }
+    .tab-bar button {
+      flex: 1;
+      border: none;
+      background: transparent;
+      color: #fff;
+      padding: 10px 8px;
+      cursor: pointer;
+      font-size: 0.85em;
+      text-align: center;
+      transition: background-color 0.2s ease;
+    }
+    /* Survol d'un onglet : nuance de bleu légèrement plus foncée */
+    .tab-bar button:hover {
+      background-color: #0b5fd6;
+    }
+    /* Onglet actif : nuance de bleu encore plus soutenue */
+    .tab-bar button.active {
+      background-color: #084dbf;
+    }
+    /* Cadre de contenu qui occupe tout l'espace restant. */
+    #contentFrame {
+      flex: 1;
+      border: none;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="tab-bar">
+      <button id="promptTab" class="active">Mieux Prompter</button>
+      <button id="chooseTab">Quelle IA choisir ?</button>
+      <button id="favoritesTab">Mes Prompts Favoris</button>
+      <button id="settingsTab">Paramètres</button>
+    </div>
+    <!-- Conteneur pour la nouvelle section "Mieux prompter".
+         Cette section est affichée uniquement lorsque l'onglet
+         correspondant est actif. Elle est masquée pour les autres
+         onglets. -->
+    <div id="promptContainer" class="mp-container">
+      <!-- Bascule entre les modes Rapide et Avancé -->
+      <div class="mp-mode-toggle">
+        <button id="mpQuickBtn" class="mp-mode-button active" data-mode="quick">⚡ Rapide</button>
+        <button id="mpAdvancedBtn" class="mp-mode-button" data-mode="advanced">🎯 Avancé</button>
+      </div>
+      <!-- Section du mode rapide -->
+      <div id="mpQuickSection" class="mp-section">
+        <label for="mpQuickInput" class="mp-label">Votre demande :</label>
+        <textarea id="mpQuickInput" class="mp-input" rows="3" placeholder="Décris brièvement ce dont tu as besoin…"></textarea>
+        <!-- Suggestions issues de la mémoire locale pour le mode rapide -->
+        <div id="mpQuickSuggestions" class="mp-suggestions"></div>
+        <button id="mpGenerateBtn" class="mp-btn">Générer un meilleur prompt</button>
+        <!-- Affichage du prompt généré, replié par défaut -->
+        <details id="mpQuickResult" class="mp-prompt-result" style="display:none;">
+          <summary>Prompt généré</summary>
+          <textarea id="mpQuickGenerated" class="mp-result" readonly></textarea>
+        </details>
+      </div>
+      <!-- Section du mode avancé -->
+      <div id="mpAdvancedSection" class="mp-section" style="display:none;">
+        <label for="mpAdvContext" class="mp-label">Contexte et objectif :</label>
+        <textarea id="mpAdvContext" class="mp-input" rows="3" placeholder="Détails, contexte, attentes…"></textarea>
+        <!-- Bascule de correction automatique en mode avancé -->
+        <div class="mp-auto-correct-toggle">
+          <span>Correction auto :</span>
+          <label class="mp-switch">
+            <input type="checkbox" id="mpAutoCorrect" />
+            <span class="mp-slider"></span>
+          </label>
+        </div>
+        <!-- Chips de clarification intelligentes -->
+        <div id="mpChips" class="mp-chips-container"></div>
+        <!-- Suggestions issues de la mémoire locale pour le mode avancé -->
+        <div id="mpAdvSuggestions" class="mp-suggestions"></div>
+        <button id="mpAdvGenerateBtn" class="mp-btn">Générer un meilleur prompt</button>
+        <!-- Affichage du prompt généré en mode avancé -->
+        <details id="mpAdvResult" class="mp-prompt-result" style="display:none;">
+          <summary>Prompt généré</summary>
+          <textarea id="mpAdvGenerated" class="mp-result" readonly></textarea>
+        </details>
+        <!-- Recommandation de modèle affichée après génération -->
+        <div id="mpModelRecommendation" class="mp-model-recommendation" style="display:none;">
+          <h3>Modèle recommandé</h3>
+          <p id="mpModelRecText"></p>
+        </div>
+      </div>
+    </div>
+    <!--
+      L'iframe charge les pages existantes de l'extension. En utilisant un
+      iframe, on ne modifie pas la structure interne des pages (ni leur CSS
+      définissant une largeur de 350 px) et on préserve toutes les
+      interactions JavaScript (navigation, stockage, etc.).
+    -->
+    <!-- Le src initial sera défini dynamiquement via le script afin
+         d'utiliser chrome.runtime.getURL pour obtenir une URL correcte. -->
+    <iframe id="contentFrame"></iframe>
+  </div>
+  <!-- Le script est externalisé pour respecter la CSP de Manifest V3 -->
+  <script src="sidepanel.js"></script>
+</body>
+</html>

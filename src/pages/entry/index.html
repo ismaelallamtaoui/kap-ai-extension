@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>KAP.ai – Sas de réflexion</title>
+  <!-- Appel de la feuille de style commune à l'ensemble de l'extension -->
+  <!-- Chemin de la feuille de style globale mis à jour -->
+  <link rel="stylesheet" href="../../../styles/style.css" />
+</head>
+<body>
+  <!-- Écran unique : question, alternatives et actions -->
+  <!-- Use a special class 'entry' on the container to apply a background image -->
+  <div class="container entry">
+    <!-- Jauge de consommation d'eau située au-dessus de l'image de fond.
+         Chaque utilisation de l'IA consomme 500 mL. Cette jauge permet de
+         sensibiliser l'utilisateur à son empreinte en eau. Les repères
+         correspondent à des équivalences choquantes (chasse d'eau et banane). -->
+    <div class="water-gauge" id="waterGauge" title="">
+      <div class="gauge-background">
+        <div class="gauge-fill" id="gaugeFill"></div>
+      </div>
+      <!-- Repères : 6 L (une chasse d'eau standard) et 160 L (production d'une banane) -->
+      <div class="gauge-markers">
+        <div class="gauge-marker" style="left: calc(6 / 160 * 100%);" data-value="6" data-tooltip="6 L : équivalent à une chasse d'eau" ></div>
+        <div class="gauge-marker" style="left: calc(160 / 160 * 100%);" data-value="160" data-tooltip="160 L : équivalent à la production d'une banane (200 g)" ></div>
+      </div>
+      <!-- Goutte d'eau décorative symbolisant la consommation -->
+      <div class="gauge-drop">💧</div>
+    </div>
+    <!--
+      En page d'accueil l'entête avec le logo et le texte KAP.ai a été supprimé
+      afin de libérer de la place. Les principales actions (quiz, prompt, favoris)
+      sont directement accessibles et les liens de pied de page restent visibles
+      même dans la hauteur limitée du popup.
+    -->
+    <p class="question">AI‑JE VRAIMENT BESOIN DE L’IA ?</p>
+    <!-- Liens vers des alternatives sobres -->
+    <div class="alt-links">
+      <!-- Boutons vers des alternatives sobres (Ecosia et Wikipédia) adoptant le
+           style de bouton en contour pour harmoniser avec le reste de l'extension. -->
+      <button id="ecosiaBtn" class="outline-btn alt-btn">
+        <img src="../../../assets/images/ecosia_logo.png" alt="Ecosia" style="height:20px; margin-right:6px; vertical-align:middle;" />
+        Ecosia
+      </button>
+      <button id="wikiBtn" class="outline-btn alt-btn">
+        <img src="../../../assets/images/wiki_logo.png" alt="Wikipedia" style="height:20px; margin-right:6px; vertical-align:middle;" />
+        Wikipédia
+      </button>
+    </div>
+    <!-- Choix d'utilisation de l'IA -->
+    <div class="next-actions">
+      <button id="chooseAiBtn" class="action-btn">M'aider à choisir la bonne IA</button>
+      <button id="promptBtn" class="action-btn">Mieux prompter</button>
+      <button id="favoritesBtn" class="action-btn">Mes prompts favoris</button>
+    </div>
+
+    <!-- Liens en bas de la page : qui sommes nous (gauche) et paramètres (droite) -->
+    <div class="footer-links">
+      <!-- Boutons de pied de page adoptant le style contour -->
+      <button id="aboutBtn" class="outline-btn">Qui sommes nous ?</button>
+      <button id="settingsBtn" class="outline-btn"><span class="gear-icon">⚙️</span></button>
+    </div>
+  </div>
+
+  <!-- Script de contrôle de la navigation -->
+  <!-- Chemin du script ajusté -->
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Profil personnel</title>
+  <!-- Chemin de la feuille de style globale mis à jour -->
+  <link rel="stylesheet" href="../../../styles/style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Modifier mon profil</h1>
+    <label for="prenom">Prénom :</label>
+    <input type="text" id="prenom" />
+
+    <label for="nom">Nom :</label>
+    <input type="text" id="nom" />
+
+    <label for="ecole">École :</label>
+    <input type="text" id="ecole" placeholder="Grenoble INP" />
+
+    <label for="specialite">Spécialité / Département :</label>
+    <input type="text" id="specialite" />
+
+    <label for="niveau">Niveau :</label>
+    <input type="text" id="niveau" placeholder="1A, 2A, …" />
+
+    <!-- Sélecteur d'IA préférée (sans mention de version) -->
+    <label for="preferredModel">Mon IA préférée :</label>
+    <select id="preferredModel">
+      <option value="">-- Sélectionner --</option>
+      <!-- Les options seront peuplées côté script à partir des modèles disponibles -->
+    </select>
+
+    <!-- Champ pour renseigner les abonnements à des services d'IA -->
+    <label for="aiSubscription">Abonnement(s) IA :</label>
+    <!-- Liste déroulante permettant de sélectionner une ou plusieurs offres payantes. L'utilisateur peut maintenir Ctrl (ou Cmd) pour sélectionner plusieurs options. -->
+    <select id="aiSubscription" multiple>
+      <option value="">-- Sélectionner --</option>
+      <option value="ChatGPT Plus">ChatGPT Plus (20 $ / mois)</option>
+      <option value="ChatGPT Pro">ChatGPT Pro (200 $ / mois)</option>
+      <option value="ChatGPT Team">ChatGPT Team (25 $–30 $ / utilisateur)</option>
+      <option value="ChatGPT Enterprise">ChatGPT Enterprise (tarif personnalisé)</option>
+      <option value="Claude Pro">Claude Pro (20 $ / mois, ~5× usage)</option>
+      <option value="Claude Max">Claude Max (100 $–200 $ / mois)</option>
+      <option value="Claude Team">Claude Team (25 $ / utilisateur)</option>
+      <option value="Claude Enterprise">Claude Enterprise (tarif personnalisé)</option>
+    </select>
+
+    <!-- Offre étudiante spéciale pour Gemini Pro, affichée sous le sélecteur -->
+    <div class="student-offer">
+      <a href="https://gemini.google/students/?utm_source=gemini&utm_medium=paid-media&utm_campaign=students_sem_bts-sem_generic__text&gclsrc=aw.ds&gad_source=1&gad_campaignid=23090768622&gbraid=0AAAAAC_C9PTHPUrhc2nvqtqEPKEBFLrne&gclid=CjwKCAiAzrbIBhA3EiwAUBaUdfME2UXfGxKGajNZi5lfq-8tt-Y_baU5StYmm5QvL4mH1ofw728IAxoCpn0QAvD_BwE" target="_blank">Offre étudiante : Gemini Pro Gratuit</a>
+    </div>
+
+    <!-- Section dédiée à l'amélioration du prompt -->
+    <div class="prompt-section" id="promptSection">
+      <h2>Mieux prompter</h2>
+      <!-- Sélection du mode de génération -->
+      <div class="mode-selection">
+        <label><input type="radio" name="promptMode" value="quick" id="modeQuick" checked /> ⚡ Rapide</label>
+        <label><input type="radio" name="promptMode" value="advanced" id="modeAdvanced" /> 🎯 Avancé</label>
+      </div>
+
+      <!-- Paramètres du mode rapide -->
+      <div id="quickSettings" class="mode-section">
+        <label for="quickInput">Votre demande :</label>
+        <textarea id="quickInput" placeholder="Décris brièvement ce dont tu as besoin…"></textarea>
+        <button id="quickGenerateBtn" class="action-btn">Générer</button>
+        <details id="quickPromptContainer" class="prompt-result" style="display:none;">
+          <summary>Prompt généré</summary>
+          <textarea id="quickGenerated" readonly></textarea>
+        </details>
+      </div>
+
+      <!-- Paramètres du mode avancé -->
+      <div id="advancedSettings" class="mode-section" style="display:none;">
+        <label for="advContext">Contexte et objectif :</label>
+        <textarea id="advContext" placeholder="Détails, contexte, attentes…"></textarea>
+        <!-- Bascule de correction automatique -->
+        <div class="auto-correct-toggle">
+          <span>Correction auto :</span>
+          <label class="switch">
+            <input type="checkbox" id="autoCorrectToggle" />
+            <span class="slider"></span>
+          </label>
+        </div>
+        <!-- Liste de chips de clarification -->
+        <div class="chips-container" id="chipContainer">
+          <!-- Les chips seront générées dynamiquement via le script -->
+        </div>
+        <button id="advGenerateBtn" class="action-btn">Générer</button>
+        <details id="advPromptContainer" class="prompt-result" style="display:none;">
+          <summary>Prompt généré</summary>
+          <textarea id="advGenerated" readonly></textarea>
+        </details>
+        <!-- Recommandation de modèle -->
+        <div id="modelRecommendation" class="recommended-model" style="display:none;">
+          <h3>Modèle recommandé</h3>
+          <p id="modelRecommendationContent"></p>
+        </div>
+      </div>
+    </div>
+
+    <button id="saveProfile" class="action-btn">Enregistrer</button>
+    <button id="backHomeFromProfile" class="back-btn">⬅ Retour</button>
+  </div>
+  <!-- Chemin du script ajusté -->
+  <script src="script.js"></script>
+</body>
+</html>

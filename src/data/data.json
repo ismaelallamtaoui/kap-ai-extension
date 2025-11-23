@@ -1,0 +1,24 @@
+{
+  "cours_ense3": [
+    "Mécanique des Fluides",
+    "Thermodynamique",
+    "Analyse de Fourier",
+    "Projet 1A",
+    "Maths Appliquées",
+    "Électronique",
+    "Automatique",
+    "Traitement du Signal"
+  ],
+  "vie_pratique": [
+    "Transport (TAG)",
+    "Logement (CROUS)",
+    "Bibliothèque (BU Joseph Fourier)",
+    "Trouver un stage",
+    "Vie associative"
+  ],
+  "sentimental": [
+    "Gestion du stress",
+    "Relations amoureuses",
+    "Équilibre vie pro/perso"
+  ]
+}
