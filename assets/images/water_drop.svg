@@ -1,0 +1,11 @@
+<svg width="60" height="120" viewBox="0 0 60 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Goutte d'eau stylisée">
+  <defs>
+    <linearGradient id="grad" x1="50%" x2="50%" y1="0%" y2="100%">
+      <stop offset="0%" stop-color="#6ec6ff"/>
+      <stop offset="50%" stop-color="#1f8fe5"/>
+      <stop offset="100%" stop-color="#0d6ebf"/>
+    </linearGradient>
+  </defs>
+  <path d="M30 6C30 6 8 42 8 66c0 14.912 9.76 34 22 34s22-19.088 22-34C52 42 30 6 30 6Z" fill="url(#grad)" stroke="#0f5fb3" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M30 70c-8 8-19 8-20 0 1 12 11 22 20 22s19-10 20-22c-1 8-12 8-20 0Z" fill="#0f7ed6" opacity="0.65"/>
+</svg>

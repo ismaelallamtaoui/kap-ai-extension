@@ -11,6 +11,7 @@ body {
 
 /* Spécifique à la page d'accueil : applique une image d'arrière‑plan avec une opacité réduite */
 .container.entry {
+  position: relative;
   /* Couche l'image en arrière plan et occupe toute la surface du conteneur */
   /* Met à jour le chemin de l'image d'arrière‑plan après déplacement des assets */
   background-image: url('../assets/images/background.jpg');
@@ -37,6 +38,178 @@ body {
 .container.entry > * {
   position: relative;
   z-index: 1;
+}
+
+/* ---------------------------------------------------------------------------
+ * Barre de sobriété – version illustrée (goutte + barre + flèche)
+ * ------------------------------------------------------------------------ */
+.sobriety-widget {
+  margin: 10px 14px 0;
+  padding: 6px 8px 12px;
+  border-radius: 16px;
+  backdrop-filter: blur(4px);
+}
+
+.sobriety-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+}
+
+.sobriety-bar.secondary {
+  box-shadow: none;
+  padding-right: 0;
+}
+
+.sobriety-drop {
+  height: 28px;
+  width: auto;
+  flex-shrink: 0;
+}
+
+.sobriety-progress {
+  position: relative;
+  flex: 1;
+  height: 18px;
+  background: #e8e8e8;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.sobriety-progress-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #1e88e5, #2196f3);
+  border-radius: 12px;
+  transition: width 0.7s ease;
+}
+
+.sobriety-toggle {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.sobriety-toggle:focus-visible {
+  outline: 2px solid #1e88e5;
+  outline-offset: 2px;
+}
+
+.sobriety-toggle-icon {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 10px solid #6b6b6b;
+  transition: transform 0.25s ease;
+}
+
+.sobriety-toggle-icon.muted {
+  opacity: 0.55;
+}
+
+.sobriety-bar.expanded .sobriety-toggle-icon,
+.sobriety-toggle[aria-expanded="true"] .sobriety-toggle-icon {
+  transform: rotate(180deg);
+}
+
+.sobriety-tooltip {
+  position: absolute;
+  left: 64px;
+  bottom: -40px;
+  padding: 6px 10px;
+  background: #1e88e5;
+  color: #fff;
+  font-size: 0.85em;
+  border-radius: 8px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  white-space: nowrap;
+}
+
+.sobriety-tooltip.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.sobriety-details {
+  margin-top: 10px;
+  padding: 14px 12px 10px;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 14px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+}
+
+.sobriety-title {
+  margin: 4px 0 6px;
+  font-size: 1.1em;
+  font-weight: 700;
+}
+
+.sobriety-caption {
+  margin: 0 0 10px;
+  font-size: 0.95em;
+}
+
+.sobriety-subtitle {
+  margin: 12px 0 6px;
+  font-weight: 600;
+}
+
+.sobriety-alt-links {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 6px;
+}
+
+.alt-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;
+  border-radius: 12px;
+  padding: 6px 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+}
+
+.alt-logo img {
+  height: 40px;
+  width: auto;
+}
+
+.alt-logo:hover img {
+  transform: scale(1.03);
+  transition: transform 0.2s ease;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /*

@@ -3,25 +3,8 @@
   "name": "KAP.ai Enhanced",
   "version": "1.0",
   "description": "KAP.ai - Sas de réflexion amélioré avec quiz de triage et constructeur de prompt.",
-  "permissions": [
-    "activeTab",
-    "storage",
-    /*
-     * Ajoute l'autorisation sidePanel pour pouvoir configurer et contrôler
-     * l'ouverture du panneau latéral. Sans cette permission, les appels
-     * chrome.sidePanel.* seraient silencieusement ignorés dans le service worker.
-     */
-    "sidePanel"
-  ],
+  "permissions": ["activeTab", "storage", "tabs", "webRequest", "sidePanel"],
   "action": {
-    /*
-     * The extension previously used a popup (entry.html) as its default UI. To
-     * convert the extension into a side panel (panneau latéral), the popup
-     * definition is removed. The action object is still required so that the
-     * extension's toolbar icon appears, but only a title and icons are
-     * specified here. Clicking the toolbar icon will be configured to open
-     * the side panel via the service worker defined below.
-     */
     "default_title": "KAP.ai Enhanced",
     "default_icon": {
       "16": "assets/images/K.png",
@@ -29,23 +12,9 @@
       "128": "assets/images/K.png"
     }
   },
-  /*
-   * Define the side panel entry point. The side panel will load
-   * sidepanel.html by default. This key tells Chrome to create a side panel for
-   * the extension and use the specified HTML file as the root of the panel.
-   */
   "side_panel": {
     "default_path": "src/sidepanel/sidepanel.html"
   },
-  /*
-   * A background service worker is added to configure the side panel behaviour.
-   * In Chrome's side panel API, clicking on the extension's toolbar icon does
-   * not automatically open the panel. The service worker calls
-   * chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true })
-   * during installation so that clicking the icon opens the side panel instead
-   * of a popup. Without this service worker the user would have to open the
-   * side panel manually from Chrome's UI.
-   */
   "background": {
     "service_worker": "src/background/background.js"
   },
@@ -53,19 +22,7 @@
     "16": "assets/images/K.png",
     "48": "assets/images/K.png",
     "128": "assets/images/K.png"
-  }
-
-  ,
-  /*
-   * Ressources accessibles depuis l'extérieur de la page principale de l'extension.
-   * Les pages internes de l'extension sont chargées dans un iframe depuis
-   * sidepanel.html. Chrome bloque la navigation vers ces ressources si elles
-   * ne sont pas déclarées comme web‑accessibles. On expose ici tous les
-   * fichiers HTML, CSS, JS, JSON et images nécessaires afin que les iframes
-   * puissent y accéder correctement. Le motif <all_urls> permet l'accès
-   * depuis n'importe quelle origine de l'extension, notamment depuis
-   * chrome-extension://<id>.
-   */
+  },
   "web_accessible_resources": [
     {
       "resources": [
@@ -79,5 +36,20 @@
       ],
       "matches": ["<all_urls>"]
     }
+  ],
+  "host_permissions": [
+    "*://*.openai.com/*",
+    "*://chat.openai.com/*",
+    "*://api.openai.com/*",
+    "*://*.ai.com/*",
+    "*://bard.google.com/*",
+    "*://*.bard.google.com/*",
+    "*://*.claude.ai/*",
+    "*://claude.ai/*",
+    "*://*.anthropic.com/*",
+    "*://*.perplexity.ai/*",
+    "*://perplexity.ai/*",
+    "*://*.poe.com/*",
+    "*://*.copilot.microsoft.com/*"
   ]
 }
