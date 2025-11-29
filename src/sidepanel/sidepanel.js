@@ -119,11 +119,35 @@
   /* -------------------------------------------------------------------
    * Logique de l'interface "Mieux prompter".
    * Cette section gère les interactions du mode rapide et du mode avancé,
-   * la génération des prompts, l'affichage des suggestions basées sur
-   * la mémoire locale et la recommandation de modèle. La logique est
-   * encapsulée ici afin d'être initialisée une seule fois à la création
-   * du panneau latéral.
+   * la génération des prompts via l'API OpenAI (ou un fallback local),
+   * la mémoire locale (localStorage) et l'affichage des modèles choisis.
    */
+
+  // Constantes et helpers de stockage
+  const STORAGE_KEY = 'kapai_mieux_prompter_history';
+  const MAX_HISTORY = 30;
+  const CHIP_LIBRARY = [
+    {
+      id: 'context',
+      label: '+ Ajouter du contexte',
+      hint: "Ajoute des éléments de contexte métier, la cible et l'objectif final."
+    },
+    {
+      id: 'format',
+      label: '+ Préciser le format de sortie',
+      hint: 'Demande un format structuré : plan, tableau, bullet points ou JSON.'
+    },
+    {
+      id: 'constraints',
+      label: '+ Durcir les contraintes',
+      hint: 'Ajoute des contraintes mesurables (longueur, ton, sources à citer).'
+    },
+    {
+      id: 'qa',
+      label: '+ Vérification / QA',
+      hint: 'Demande une checklist de vérification ou des tests rapides.'
+    }
+  ];
 
   // Références des éléments du DOM pour la zone Mieux prompter
   const mpQuickBtn = document.getElementById('mpQuickBtn');
@@ -144,9 +168,97 @@
   const mpModelRecText = document.getElementById('mpModelRecText');
   const mpQuickSuggestions = document.getElementById('mpQuickSuggestions');
   const mpAdvSuggestions = document.getElementById('mpAdvSuggestions');
+  const mpStatus = document.getElementById('mpStatus');
+  const mpModelBadge = document.getElementById('mpModelBadge');
+  const mpHistoryList = document.getElementById('mpHistoryList');
+  const mpInsights = document.getElementById('mpInsights');
 
   // Liste des chips sélectionnées en mode avancé
   let selectedChips = [];
+
+  /**
+   * Normalise un texte utilisateur (espaces, sauts de ligne).
+   * @param {string} text
+   * @returns {string}
+   */
+  function normalizeText(text) {
+    if (!text) return '';
+    return text
+      .replace(/\s+$/g, '')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+  }
+
+  /**
+   * Lecture de l'historique structuré depuis localStorage.
+   * @returns {Array}
+   */
+  function readHistory() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  /**
+   * Écrit l'historique structuré dans localStorage.
+   * @param {Array} entries
+   */
+  function writeHistory(entries) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+    } catch (e) {
+      // Ignore les erreurs de quota
+    }
+  }
+
+  /**
+   * Ajoute une entrée structurée à l'historique avec un plafond FIFO.
+   * @param {Object} entry
+   */
+  function appendHistory(entry) {
+    if (!entry || !entry.input) return;
+    const hist = readHistory();
+    hist.push({ ...entry, timestamp: Date.now() });
+    const sliceStart = Math.max(hist.length - MAX_HISTORY, 0);
+    writeHistory(hist.slice(sliceStart));
+  }
+
+  /**
+   * Retourne les dernières entrées uniques pour alimenter les suggestions.
+   * @param {number} limit
+   */
+  function getRecentInputs(limit = 3) {
+    const hist = readHistory();
+    const unique = [];
+    for (let i = hist.length - 1; i >= 0 && unique.length < limit; i--) {
+      const val = hist[i]?.input;
+      if (val && !unique.includes(val)) unique.push(val);
+    }
+    return unique;
+  }
+
+  /**
+   * Identifie les tags fréquents dans l'historique pour nourrir le bloc
+   * "Suggestions récentes / fréquentes".
+   */
+  function getFrequentTags(limit = 4) {
+    const hist = readHistory();
+    const counts = {};
+    hist.forEach((item) => {
+      (item.tags || []).forEach((tag) => {
+        const key = tag.toLowerCase();
+        counts[key] = (counts[key] || 0) + 1;
+      });
+    });
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, limit)
+      .map(([tag]) => tag);
+  }
 
   /**
    * Bascule entre les modes rapide et avancé.
@@ -154,10 +266,8 @@
    */
   function setPromptMode(mode) {
     if (!mpQuickSection || !mpAdvancedSection) return;
-    // Définir l'état actif sur les boutons de mode
     if (mpQuickBtn) mpQuickBtn.classList.toggle('active', mode === 'quick');
     if (mpAdvancedBtn) mpAdvancedBtn.classList.toggle('active', mode === 'advanced');
-    // Afficher/masquer les sections
     mpQuickSection.style.display = mode === 'quick' ? 'block' : 'none';
     mpAdvancedSection.style.display = mode === 'advanced' ? 'block' : 'none';
   }
@@ -167,220 +277,422 @@
   if (mpAdvancedBtn) mpAdvancedBtn.addEventListener('click', () => setPromptMode('advanced'));
 
   /**
-   * Sauvegarde une chaîne dans l'historique local des demandes.
-   * On garde un maximum de 20 entrées et on n'ajoute que les valeurs non vides.
-   * @param {string} str
+   * Met à jour l'état visuel (chargement/idle) et désactive les boutons.
+   * @param {boolean} isLoading
    */
-  function saveToHistory(str) {
-    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-      chrome.storage.local.get({ promptHistory: [] }, (res) => {
-        let hist = Array.isArray(res.promptHistory) ? res.promptHistory : [];
-        if (str) {
-          hist.push(str);
-          if (hist.length > 20) hist = hist.slice(hist.length - 20);
-        }
-        chrome.storage.local.set({ promptHistory: hist });
-      });
+  function setLoadingState(isLoading) {
+    if (mpGenerateBtn) {
+      mpGenerateBtn.disabled = isLoading;
+      mpGenerateBtn.textContent = isLoading ? 'Génération en cours…' : 'Générer un meilleur prompt';
+    }
+    if (mpAdvGenerateBtn) {
+      mpAdvGenerateBtn.disabled = isLoading;
+      mpAdvGenerateBtn.textContent = isLoading ? 'Génération en cours…' : 'Générer un meilleur prompt';
+    }
+    if (mpStatus) {
+      mpStatus.className = 'mp-status mp-status-info';
+      mpStatus.textContent = isLoading ? 'Optimisation en cours, patiente quelques secondes…' : '';
     }
   }
 
   /**
-   * Charge les suggestions depuis l'historique local et les affiche dans
-   * l'élément passé. Les suggestions sont affichées sous forme de puces
-   * cliquables qui remplissent l'input correspondant quand on clique.
-   * @param {HTMLElement} container conteneur où insérer les suggestions
-   * @param {HTMLTextAreaElement} targetInput champ à préremplir quand
-   *        l'utilisateur clique sur une suggestion
+   * Affiche un message d'état (info/erreur/succès) dans la bannière.
    */
-  function loadSuggestions(container, targetInput) {
-    if (!container) return;
-    // Nettoie le conteneur
-    container.innerHTML = '';
-    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-      chrome.storage.local.get({ promptHistory: [] }, (res) => {
-        const hist = Array.isArray(res.promptHistory) ? res.promptHistory : [];
-        // On ne garde que les 3 dernières suggestions non vides
-        const unique = [];
-        for (let i = hist.length - 1; i >= 0 && unique.length < 3; i--) {
-          const val = hist[i];
-          if (val && !unique.includes(val)) {
-            unique.push(val);
-          }
-        }
-        unique.forEach((txt) => {
-          const span = document.createElement('span');
-          span.className = 'mp-suggestion';
-          span.textContent = txt;
-          span.addEventListener('click', () => {
-            if (targetInput) targetInput.value = txt;
-          });
-          container.appendChild(span);
+  function showStatus(message, type = 'info') {
+    if (!mpStatus) return;
+    mpStatus.className = `mp-status mp-status-${type}`;
+    mpStatus.textContent = message;
+  }
+
+  /**
+   * Rend un badge de modèle sélectionné et l'affiche dans le footer.
+   */
+  function renderModelBadge(modelChoice) {
+    if (!mpModelBadge) return;
+    const text = modelChoice
+      ? `${modelChoice.modelId} – ${modelChoice.reasoning}`
+      : 'Modèle non défini';
+    mpModelBadge.textContent = text;
+  }
+
+  /**
+   * Rend les suggestions rapides/avancées et le bloc de mémoire.
+   */
+  function renderSuggestions() {
+    const recent = getRecentInputs(4);
+    const frequentTags = getFrequentTags(4);
+    const renderList = (container, items, targetInput) => {
+      if (!container) return;
+      container.innerHTML = '';
+      items.forEach((txt) => {
+        const span = document.createElement('span');
+        span.className = 'mp-suggestion';
+        span.textContent = txt;
+        span.addEventListener('click', () => {
+          if (targetInput) targetInput.value = txt;
         });
+        container.appendChild(span);
       });
+      if (items.length === 0) {
+        const empty = document.createElement('span');
+        empty.className = 'mp-suggestion muted';
+        empty.textContent = 'Aucune suggestion pour le moment';
+        container.appendChild(empty);
+      }
+    };
+    renderList(mpQuickSuggestions, recent, mpQuickInput);
+    renderList(mpAdvSuggestions, recent, mpAdvContext);
+    if (mpHistoryList) {
+      mpHistoryList.innerHTML = '';
+      const merged = [...recent, ...frequentTags.map((t) => `Tag fréquent : ${t}`)];
+      merged.forEach((txt) => {
+        const span = document.createElement('span');
+        span.className = 'mp-suggestion';
+        span.textContent = txt;
+        mpHistoryList.appendChild(span);
+      });
+      if (merged.length === 0) {
+        const empty = document.createElement('span');
+        empty.className = 'mp-suggestion muted';
+        empty.textContent = 'Commence par générer un prompt pour voir des suggestions.';
+        mpHistoryList.appendChild(empty);
+      }
     }
   }
 
   /**
-   * Charge des chips de clarification intelligentes à partir de l'historique
-   * local. On sélectionne jusqu'à trois éléments récents et on les
-   * transforme en puces interactives qui modifient selectedChips au clic.
+   * Rend les chips intelligentes, y compris les tags fréquents.
    */
   function loadChips() {
     if (!mpChipsContainer) return;
     mpChipsContainer.innerHTML = '';
-    const defaultChips = [
-      'Contexte précis',
-      'Contraintes & préférences',
-      'Objectif final'
-    ];
-    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-      chrome.storage.local.get({ promptHistory: [] }, (res) => {
-        const hist = Array.isArray(res.promptHistory) ? res.promptHistory : [];
-        const unique = [];
-        for (let i = hist.length - 1; i >= 0 && unique.length < 3; i--) {
-          const val = hist[i];
-          if (val && !unique.includes(val)) {
-            unique.push(val);
+    const dynamicTags = getFrequentTags(2).map((tag) => ({
+      id: `tag-${tag}`,
+      label: `+ ${tag}`,
+      hint: `Inclure le tag récurrent « ${tag} » pour rester cohérent.`
+    }));
+    const chips = [...CHIP_LIBRARY, ...dynamicTags];
+    chips.forEach((chipDef) => {
+      const chip = document.createElement('span');
+      chip.className = 'mp-chip';
+      chip.textContent = chipDef.label;
+      chip.title = chipDef.hint;
+      chip.dataset.id = chipDef.id;
+      chip.addEventListener('click', () => {
+        const exists = selectedChips.find((c) => c.id === chipDef.id);
+        if (exists) {
+          selectedChips = selectedChips.filter((c) => c.id !== chipDef.id);
+          chip.classList.remove('selected');
+          if (mpAdvContext) {
+            removeChipHintFromInput(chipDef);
           }
-        }
-        const chips = unique.length > 0 ? unique : defaultChips;
-        chips.forEach((txt) => {
-          const chip = document.createElement('span');
-          chip.className = 'mp-chip';
-          chip.textContent = txt;
-          chip.addEventListener('click', () => {
-            const idx = selectedChips.indexOf(txt);
-            if (idx > -1) {
-              // Retire la chip
-              selectedChips.splice(idx, 1);
-              chip.classList.remove('selected');
-            } else {
-              selectedChips.push(txt);
-              chip.classList.add('selected');
-            }
-          });
-          mpChipsContainer.appendChild(chip);
-        });
-      });
-    } else {
-      // Utilise les chips par défaut si le stockage n'est pas disponible
-      defaultChips.forEach((txt) => {
-        const chip = document.createElement('span');
-        chip.className = 'mp-chip';
-        chip.textContent = txt;
-        chip.addEventListener('click', () => {
-          const idx = selectedChips.indexOf(txt);
-          if (idx > -1) {
-            selectedChips.splice(idx, 1);
-            chip.classList.remove('selected');
-          } else {
-            selectedChips.push(txt);
-            chip.classList.add('selected');
-          }
-        });
-        mpChipsContainer.appendChild(chip);
-      });
-    }
-  }
-
-  /**
-   * Met à jour la recommandation de modèle en fonction des préférences
-   * enregistrées dans le profil utilisateur. Si un modèle préféré est
-   * défini, on l'affiche, sinon un message d'information est proposé.
-   */
-  function updateModelRecommendation() {
-    if (!mpModelRecText || !mpModelRecommendation) return;
-    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-      chrome.storage.local.get({ profile: {} }, (res) => {
-        const prof = res.profile || {};
-        const pref = prof.preferredModel || '';
-        if (pref) {
-          mpModelRecText.innerHTML = `Votre modèle préféré est <strong>${pref}</strong>. Utilisez‑le pour de meilleurs résultats.`;
         } else {
-          mpModelRecText.textContent = `Aucun modèle préféré défini. Sélectionnez-en un dans votre profil pour obtenir une recommandation.`;
+          selectedChips.push(chipDef);
+          chip.classList.add('selected');
+          if (mpAdvContext) {
+            appendChipHintToInput(chipDef);
+          }
         }
       });
+      mpChipsContainer.appendChild(chip);
+    });
+  }
+
+  /**
+   * Ajoute un rappel de chip dans la zone de texte avancée avec un marqueur
+   * identifiable, afin de pouvoir le retirer proprement en cas de désélection.
+   * @param {{id: string, hint?: string, label?: string}} chip
+   */
+  function appendChipHintToInput(chip) {
+    if (!mpAdvContext) return;
+    const marker = `[chip:${chip.id}]`;
+    const hintText = chip.hint || chip.label || '';
+    const existingLines = mpAdvContext.value.split('\n');
+    // Nettoie toute ancienne mention du même chip pour éviter les doublons
+    const filtered = existingLines.filter((line) => !line.startsWith(marker));
+    filtered.push(`${marker} ${hintText}`);
+    mpAdvContext.value = filtered.join('\n').trim();
+  }
+
+  /**
+   * Retire le rappel d'un chip de la zone de texte avancée.
+   * @param {{id: string}} chip
+   */
+  function removeChipHintFromInput(chip) {
+    if (!mpAdvContext) return;
+    const marker = `[chip:${chip.id}]`;
+    const lines = mpAdvContext.value.split('\n');
+    const filtered = lines.filter((line) => !line.startsWith(marker));
+    mpAdvContext.value = filtered.join('\n').trim();
+  }
+
+  /**
+   * Heuristique de sélection du meilleur modèle selon la longueur, le mode
+   * et le type de tâche.
+   */
+  function selectBestModel({ length = 0, taskType = '', mode = 'rapide' }) {
+    const normalizedMode = mode === 'avance' ? 'avance' : 'rapide';
+    let modelId = 'gpt-4o-mini';
+    let reasoning = 'Prompt court et réponse rapide privilégiée.';
+    const longPrompt = length > 600;
+    const complexTask = /plan|analyse|code|audit|strategie/i.test(taskType || '');
+    if (normalizedMode === 'avance' || longPrompt || complexTask) {
+      modelId = 'gpt-4.1';
+      reasoning = 'Mode avancé ou tâche complexe → modèle plus robuste.';
+    }
+    return { modelId, reasoning };
+  }
+
+  /**
+   * Post-traitement local pour structurer le prompt lorsque la correction
+   * automatique est active.
+   */
+  function applyAutoCorrection(prompt, tags = []) {
+    if (!prompt) return '';
+    const header = 'Structure conseillée :';
+    const sections = [
+      '- Objectif : clarifie le but final et le livrable attendu.',
+      '- Contexte : rappelle les contraintes clés (ton, format, public).',
+      '- Étapes : détaille les actions à suivre.',
+      '- Vérification : liste les points de contrôle avant de livrer.'
+    ];
+    const tagsLine = tags.length ? `\nMots-clés : ${tags.join(', ')}` : '';
+    return `${prompt}\n\n${header}\n${sections.join('\n')}${tagsLine}`;
+  }
+
+  /**
+   * Essayez de parser une chaîne JSON, même si elle est entourée de balises
+   * ou de code fences. Retourne null en cas d'échec.
+   */
+  function safeParseJson(str) {
+    if (!str) return null;
+    const cleaned = str.replace(/^```json\s*/i, '').replace(/```$/i, '').trim();
+    try {
+      return JSON.parse(cleaned);
+    } catch (e) {
+      return null;
     }
   }
 
   /**
-   * Fonction génératrice de prompt optimisé. Cette fonction assemble les
-   * différentes informations saisies par l'utilisateur. Aucun appel à
-   * l'IA n'est effectué ici : la logique d'intégration sera branchée
-   * ultérieurement dans cette fonction.
-   * @param {Object} opts
-   * @param {string} opts.mode
-   * @param {string} opts.input
-   * @param {boolean} [opts.autoCorrect]
-   * @param {Array<string>} [opts.chips]
-   * @returns {string}
+   * Devine des tags simples en analysant le texte et les chips.
    */
-  function generateOptimizedPrompt(opts) {
-    const mode = opts.mode;
-    const input = opts.input || '';
-    const auto = opts.autoCorrect || false;
-    const chips = Array.isArray(opts.chips) ? opts.chips : [];
-    const lines = [];
-    if (mode === 'quick') {
-      if (input) {
-        lines.push(`Agis comme un assistant expert et aide-moi avec cette demande : ${input}`);
-      }
-    } else {
-      if (input) lines.push(`Contexte : ${input}`);
-      if (chips.length > 0) {
-        lines.push(`Clarifications : ${chips.join(' ; ')}`);
-      }
-      if (auto) {
-        lines.push(`Veuillez corriger automatiquement la grammaire et l'orthographe de ma demande.`);
-      }
-    }
-    if (lines.length === 0) {
-      lines.push('Décris ton besoin pour générer un prompt.');
-    }
-    return lines.join('\n');
+  function deriveTags(text, chips = []) {
+    const tags = [];
+    const lower = (text || '').toLowerCase();
+    if (/code|script|api|fonction/i.test(lower)) tags.push('tech');
+    if (/plan|strategie|roadmap/i.test(lower)) tags.push('planification');
+    if (/email|message|communication/i.test(lower)) tags.push('communication');
+    if (chips.length) tags.push('assisté');
+    return tags.length ? tags : ['general'];
   }
 
   /**
-   * Génère un prompt en mode rapide et l'affiche dans le panneau pliable.
+   * Appel à l'API OpenAI. L'API key doit être renseignée via localStorage
+   * (clé "kapai_openai_api_key") ou un autre mécanisme sécurisé.
    */
-  function generateQuick() {
+  async function callOpenAI(modelId, messages) {
+    const apiKey = (typeof localStorage !== 'undefined' && localStorage.getItem('kapai_openai_api_key')) || '';
+    if (!apiKey) {
+      throw new Error('Aucune clé API OpenAI configurée (localStorage.kapai_openai_api_key).');
+    }
+    const payload = {
+      model: modelId,
+      messages,
+      temperature: 0.4,
+      response_format: { type: 'json_object' }
+    };
+    const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`
+      },
+      body: JSON.stringify(payload)
+    });
+    if (!resp.ok) {
+      const errText = await resp.text();
+      throw new Error(`Erreur API (${resp.status}): ${errText}`);
+    }
+    const data = await resp.json();
+    const content = data?.choices?.[0]?.message?.content || '';
+    return safeParseJson(content) || { optimized_prompt: content };
+  }
+
+  /**
+   * Fonction centrale pour optimiser un prompt utilisateur.
+   */
+  async function generateOptimizedPrompt(userInput, options = {}) {
+    const mode = options.mode === 'advanced' ? 'advanced' : 'quick';
+    const normalized = normalizeText(userInput);
+    const chipHints = (options.chips || []).map((c) => c.hint || c.label).join(' | ');
+    const modelChoice = selectBestModel({
+      length: normalized.length,
+      taskType: chipHints || options.taskType || '',
+      mode: mode === 'advanced' ? 'avance' : 'rapide'
+    });
+
+    const systemPrompt = [
+      'Tu es un optimiseur de prompts. Retourne UNIQUEMENT un JSON.',
+      '{"optimized_prompt": "...", "tags": [], "suggestions": []}',
+      "Le prompt optimisé doit être clair, structuré et concis (max 8 lignes).",
+      'Nettoie les espaces et évite les répétitions. Les tags décrivent le type de tâche, le ton et le niveau de détail.'
+    ].join(' ');
+
+    const userPrompt = `Texte utilisateur : ${normalized || 'N/A'}\n` +
+      `Mode : ${mode}\n` +
+      `Chips : ${chipHints || 'aucune'}\n` +
+      `Correction auto : ${options.autoCorrect ? 'oui' : 'non'}\n` +
+      'Produis le JSON demandé. Utilise le français.';
+
+    let parsed;
+    try {
+      parsed = await callOpenAI(modelChoice.modelId, [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ]);
+    } catch (e) {
+      // Fallback local : message explicite + prompt épuré
+      const cleaned = normalized || 'Décris ton besoin pour générer un prompt.';
+      const chipContext = chipHints ? `\nChips actives : ${chipHints}` : '';
+      parsed = {
+        optimized_prompt: `Optimisation locale (clé API manquante ou erreur) : ${cleaned}${chipContext}`,
+        tags: deriveTags(cleaned, options.chips),
+        suggestions: [
+          'Ajoute des exemples précis pour affiner la génération.',
+          'Indique le format souhaité (liste, plan, tableau, JSON).'
+        ],
+        error: e.message
+      };
+    }
+
+    let optimized = parsed?.optimized_prompt || normalized || '';
+    const tags = parsed?.tags || deriveTags(normalized, options.chips);
+    const suggestions = Array.isArray(parsed?.suggestions) ? parsed.suggestions : [];
+
+    if (options.autoCorrect) {
+      optimized = applyAutoCorrection(optimized, tags);
+    }
+
+    return {
+      optimizedPrompt: optimized,
+      tags,
+      suggestions,
+      model: modelChoice,
+      raw: parsed
+    };
+  }
+
+  /**
+   * Affiche les insights (tags + suggestions) sous le prompt généré.
+   */
+  function renderInsights(data) {
+    if (!mpInsights) return;
+    mpInsights.innerHTML = '';
+    const { tags = [], suggestions = [] } = data || {};
+    if (tags.length) {
+      const tagTitle = document.createElement('div');
+      tagTitle.className = 'mp-insight-title';
+      tagTitle.textContent = 'Tags détectés';
+      mpInsights.appendChild(tagTitle);
+      const list = document.createElement('div');
+      list.className = 'mp-suggestions';
+      tags.forEach((tag) => {
+        const span = document.createElement('span');
+        span.className = 'mp-suggestion';
+        span.textContent = tag;
+        list.appendChild(span);
+      });
+      mpInsights.appendChild(list);
+    }
+    if (suggestions.length) {
+      const sugTitle = document.createElement('div');
+      sugTitle.className = 'mp-insight-title';
+      sugTitle.textContent = 'Suggestions de variations';
+      mpInsights.appendChild(sugTitle);
+      const list = document.createElement('ul');
+      list.className = 'mp-suggestion-list';
+      suggestions.forEach((s) => {
+        const li = document.createElement('li');
+        li.textContent = s;
+        list.appendChild(li);
+      });
+      mpInsights.appendChild(list);
+    }
+  }
+
+  /**
+   * Gestion des clics sur le bouton Rapide.
+   */
+  async function generateQuick() {
     if (!mpQuickInput) return;
-    const desc = mpQuickInput.value.trim();
+    const desc = normalizeText(mpQuickInput.value);
     if (!desc) {
-      if (mpQuickResult) mpQuickResult.style.display = 'none';
-      if (mpQuickGenerated) mpQuickGenerated.value = '';
+      showStatus('Ajoute une demande pour générer un prompt optimisé.', 'warning');
       return;
     }
-    const text = generateOptimizedPrompt({ mode: 'quick', input: desc });
-    if (mpQuickGenerated) mpQuickGenerated.value = text;
-    if (mpQuickResult) mpQuickResult.style.display = 'block';
-    saveToHistory(desc);
-    // Recharge suggestions et chips
-    loadSuggestions(mpQuickSuggestions, mpQuickInput);
-    loadSuggestions(mpAdvSuggestions, mpAdvContext);
-    loadChips();
+    setLoadingState(true);
+    try {
+      const result = await generateOptimizedPrompt(desc, { mode: 'quick', chips: [] });
+      if (mpQuickGenerated) mpQuickGenerated.value = result.optimizedPrompt;
+      if (mpQuickResult) mpQuickResult.style.display = 'block';
+      renderModelBadge(result.model);
+      renderInsights(result);
+      appendHistory({
+        input: desc,
+        optimizedPrompt: result.optimizedPrompt,
+        tags: result.tags,
+        modelId: result.model?.modelId,
+        mode: 'quick'
+      });
+      renderSuggestions();
+      showStatus('Prompt optimisé avec succès (mode Rapide).', 'success');
+    } catch (e) {
+      showStatus(`Erreur lors de la génération : ${e.message}`, 'error');
+    } finally {
+      setLoadingState(false);
+    }
   }
 
   /**
-   * Génère un prompt en mode avancé et l'affiche. Met également à jour
-   * la recommandation de modèle.
+   * Gestion du bouton Avancé (avec chips & correction auto).
    */
-  function generateAdvanced() {
+  async function generateAdvanced() {
     if (!mpAdvContext) return;
-    const ctx = mpAdvContext.value.trim();
+    const ctx = normalizeText(mpAdvContext.value);
+    if (!ctx) {
+      showStatus('Décris ton contexte pour générer un prompt avancé.', 'warning');
+      return;
+    }
     const auto = mpAutoCorrect ? mpAutoCorrect.checked : false;
-    const text = generateOptimizedPrompt({ mode: 'advanced', input: ctx, autoCorrect: auto, chips: selectedChips });
-    if (mpAdvGenerated) mpAdvGenerated.value = text;
-    if (mpAdvResult) mpAdvResult.style.display = 'block';
-    // Affiche la recommandation de modèle et met à jour son contenu
-    if (mpModelRecommendation) mpModelRecommendation.style.display = 'block';
-    updateModelRecommendation();
-    // Sauvegarde le contexte dans l'historique
-    saveToHistory(ctx);
-    // Recharge suggestions et chips
-    loadSuggestions(mpQuickSuggestions, mpQuickInput);
-    loadSuggestions(mpAdvSuggestions, mpAdvContext);
-    loadChips();
+    setLoadingState(true);
+    try {
+      const result = await generateOptimizedPrompt(ctx, {
+        mode: 'advanced',
+        autoCorrect: auto,
+        chips: selectedChips
+      });
+      if (mpAdvGenerated) mpAdvGenerated.value = result.optimizedPrompt;
+      if (mpAdvResult) mpAdvResult.style.display = 'block';
+      if (mpModelRecommendation) mpModelRecommendation.style.display = 'block';
+      mpModelRecText.textContent = `${result.model.modelId} – ${result.model.reasoning}`;
+      renderModelBadge(result.model);
+      renderInsights(result);
+      appendHistory({
+        input: ctx,
+        optimizedPrompt: result.optimizedPrompt,
+        tags: result.tags,
+        modelId: result.model?.modelId,
+        mode: 'advanced'
+      });
+      renderSuggestions();
+      const correctionMsg = auto ? ' (correction auto activée)' : '';
+      showStatus(`Prompt avancé généré${correctionMsg}.`, 'success');
+    } catch (e) {
+      showStatus(`Erreur lors de la génération : ${e.message}`, 'error');
+    } finally {
+      setLoadingState(false);
+    }
   }
 
   // Branche les actions des boutons
@@ -388,7 +700,6 @@
   if (mpAdvGenerateBtn) mpAdvGenerateBtn.addEventListener('click', generateAdvanced);
 
   // Charge initialement les suggestions et les chips
-  loadSuggestions(mpQuickSuggestions, mpQuickInput);
-  loadSuggestions(mpAdvSuggestions, mpAdvContext);
+  renderSuggestions();
   loadChips();
 })();

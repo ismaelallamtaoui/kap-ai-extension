@@ -82,6 +82,7 @@
          correspondant est actif. Elle est masquée pour les autres
          onglets. -->
     <div id="promptContainer" class="mp-container">
+      <div class="mp-status" id="mpStatus" aria-live="polite"></div>
       <!-- Bascule entre les modes Rapide et Avancé -->
       <div class="mp-mode-toggle">
         <button id="mpQuickBtn" class="mp-mode-button active" data-mode="quick">⚡ Rapide</button>
@@ -127,6 +128,21 @@
           <h3>Modèle recommandé</h3>
           <p id="mpModelRecText"></p>
         </div>
+      </div>
+
+      <div id="mpInsights" class="mp-insights"></div>
+
+      <div class="mp-history-panel">
+        <div class="mp-history-header">
+          <h3>Suggestions récentes / fréquentes</h3>
+          <p>Basées sur les derniers prompts envoyés</p>
+        </div>
+        <div id="mpHistoryList" class="mp-suggestions"></div>
+      </div>
+
+      <div class="mp-footer">
+        <div class="mp-model-badge" id="mpModelBadge">Modèle non défini</div>
+        <div class="mp-footnote">Les appels API nécessitent ta clé OpenAI (non stockée par défaut).</div>
       </div>
     </div>
     <!--
