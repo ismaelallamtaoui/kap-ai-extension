@@ -1,8 +1,10 @@
 # KAP.ai Chrome Extension (Clean Rebuild)
 
-Ce dépôt contient une version reconstruite et nettoyée de l’extension **KAP.ai Enhanced**.  
-L’objectif est de fournir une base de code claire et maintenable en conservant toutes les fonctionnalités d’origine sans en ajouter de nouvelles.  
-L’extension aide les utilisateurs à réfléchir à leur usage de l’IA (quiz de triage, prompts favoris, constructeur de prompt) et propose désormais une interface “Mieux Prompter” moderne intégrée au panneau latéral.
+> **Chrome Extension – Sidepanel assistant for AI prompting**
+
+Ce dépôt contient une version reconstruite et nettoyée de l’extension **KAP.ai Enhanced**.
+L’objectif est de fournir une base de code claire et maintenable en conservant toutes les fonctionnalités d’origine tout en modernisant “Mieux Prompter”.
+L’extension aide les utilisateurs à réfléchir à leur usage de l’IA (quiz de triage, prompts favoris, constructeur de prompt) et propose désormais une interface “Mieux Prompter” enrichie dans le panneau latéral.
 
 ## Structure du projet
 
@@ -55,12 +57,33 @@ kap_ai_extension/
 │       └── suggestions.json # Suggestions de chips pour l’interface de profil
 ```
 
-## Installation de l’extension
+## Installation dans Chrome
 
 1. Ouvrez Chrome/Chromium et rendez-vous sur `chrome://extensions`.
 2. Activez le **mode développeur** (coin supérieur droit).
 3. Cliquez sur **“Charger l’extension non empaquetée”** et sélectionnez le dossier `kap_ai_extension` contenant le fichier `manifest.json`.
 4. L’icône de l’extension apparaît dans la barre d’outils ; cliquez‑dessus pour ouvrir le panneau latéral.
+
+## Mieux prompter
+
+La section “Mieux prompter” du panneau latéral offre un optimiseur de prompt dédié avec :
+
+- **Double mode** : ⚡ Rapide pour des demandes concises, 🎯 Avancé pour des cas complexes.
+- **Sélection automatique du modèle** : heuristique entre `gpt-4o-mini` et `gpt-4.1`, affichée dans le footer.
+- **Correction auto (Avancé)** : option pour restructurer le prompt généré (sections, checklist de vérification).
+- **Chips intelligentes** : boutons “+ Ajouter du contexte”, “+ Préciser le format de sortie”, “+ Durcir les contraintes”, etc., qui enrichissent le prompt.
+- **Mémoire locale** : historique structuré (localStorage) pour retrouver les derniers prompts et tags fréquents, affiché dans “Suggestions récentes / fréquentes”.
+- **État & erreurs** : bannière d’état (idle/chargement/succès/erreur) et recommandations de modèle affichées dans un panneau dédié.
+
+Pour utiliser l’optimisation automatique, renseignez une clé OpenAI (non stockée par défaut) dans `localStorage.kapai_openai_api_key` via la console du sidepanel ou un flux d’options sécurisé. En l’absence de clé, un fallback local affiche un prompt nettoyé et des suggestions.
+
+## Architecture rapide
+
+- `src/sidepanel/` : panneau latéral, onglets et interface “Mieux prompter”.
+- `src/pages/` : pages historiques (quiz, constructeur, favoris, profil, triage, etc.) chargées dans l’iframe.
+- `src/utils/` : utilitaires partagés (ex. base de données des modèles IA).
+- `styles/` : feuille de style globale (incluant les classes `.mp-*` pour “Mieux prompter”).
+- `assets/` : ressources visuelles.
 
 ## Fonctionnement général
 

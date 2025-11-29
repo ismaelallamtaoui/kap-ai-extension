@@ -679,6 +679,10 @@ fieldset input[type="radio"] {
 .mp-suggestion:hover {
   background-color: #E8F0FE;
 }
+.mp-suggestion.muted {
+  color: #6B7280;
+  border-style: dashed;
+}
 .mp-model-recommendation {
   margin-top: 12px;
   padding: 10px;
@@ -731,6 +735,112 @@ fieldset input[type="radio"] {
 }
 .mp-switch input:checked + .mp-slider::before {
   transform: translateX(24px);
+}
+
+/* Bandeau d'état (info / succès / erreur) pour Mieux prompter */
+.mp-status {
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 0.85em;
+  margin-bottom: 10px;
+  border: 1px solid transparent;
+}
+.mp-status-info {
+  background-color: #E8F0FE;
+  border-color: #BFDBFE;
+  color: #1E3A8A;
+}
+.mp-status-success {
+  background-color: #ecfdf3;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+.mp-status-warning {
+  background-color: #fff7ed;
+  border-color: #fed7aa;
+  color: #92400e;
+}
+.mp-status-error {
+  background-color: #fef2f2;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+/* Bloc insights (tags + suggestions) */
+.mp-insights {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid #D1D5DB;
+  border-radius: 10px;
+  background-color: #FFFFFF;
+}
+.mp-insight-title {
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #1E3A8A;
+}
+.mp-suggestion-list {
+  margin: 0;
+  padding-left: 18px;
+  color: #1F2937;
+  font-size: 0.9em;
+}
+.mp-suggestion-list li + li {
+  margin-top: 4px;
+}
+
+/* Bloc des suggestions récentes/fréquentes */
+.mp-history-panel {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid #D1D5DB;
+  border-radius: 10px;
+  background-color: #F8FAFC;
+}
+.mp-history-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.mp-history-header h3 {
+  margin: 0;
+  font-size: 1em;
+  color: #1E3A8A;
+}
+.mp-history-header p {
+  margin: 0;
+  color: #6B7280;
+  font-size: 0.8em;
+}
+
+/* Pied de page de la zone Mieux prompter */
+.mp-footer {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid #D1D5DB;
+  border-radius: 10px;
+  background-color: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.mp-model-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9em;
+  color: #1E3A8A;
+  padding: 6px 10px;
+  background-color: #E8F0FE;
+  border-radius: 9999px;
+  border: 1px solid #BFDBFE;
+  width: fit-content;
+}
+.mp-footnote {
+  color: #6B7280;
+  font-size: 0.75em;
 }
 
 /* Bouton d'action en contour (fond blanc, bord gris) utilisé pour "Ouvrir" et pour
